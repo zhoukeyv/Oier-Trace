@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OIerDb 查询工具</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>OIerDb 查询工具</h1>
+            <p>信息学奥赛选手数据模糊查询</p>
+        </div>
+
+        <div class="content">
+            <div id="loadingIndicator" class="loading">
+                <p id="loadingText">正在加载数据，请稍候...</p>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <div class="progress-info">
+                        <span id="progressPercent">0%</span>
+                        <span id="progressDetail"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="mainContent" class="hidden">
+                <!-- 快速查询（默认显示） -->
+                <div id="quickSearchSection">
+                    <div class="section">
+                        <div class="section-title">快速查询</div>
+                        <div class="section-content">
+                            <div class="form-group">
+                                <label>姓名简称</label>
+                                <input type="text" id="quickNameInput" placeholder="如: zxw, lhx">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>搜索学校（可选）</label>
+                                <input type="text" id="quickSchoolSearch" placeholder="输入学校关键字（如: 杭州二中, 清华附中）">
+                                <div id="quickSchoolResults" class="search-results hidden"></div>
+                            </div>
+                            
+                            <button id="quickQueryBtn" style="font-size: 1em; padding: 12px;">开始查询</button>
+                            
+                            <div style="margin-top: 16px; text-align: center;">
+                                <small style="color: #666; font-size: 0.85em;">
+                                    需要更多筛选条件？<a href="#" id="showAdvancedLink" style="color: #808080; text-decoration: underline;">高级查询</a>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 快速查询结果显示区域 -->
+                    <div id="quickResultsContainer" class="results-container hidden"></div>
+                </div>
+
+                <!-- 高级查询（隐藏） -->
+                <div id="advancedSearchSection" class="hidden">
+                    <div class="advanced-header">
+                        <h3>高级查询</h3>
+                        <button id="backToQuickBtn" class="secondary-btn" style="width: auto; padding: 8px 16px;">← 返回快速查询</button>
+                    </div>
+                    
+                    <!-- 查询模式选择 -->
+                    <div class="section" style="margin-bottom: 24px;">
+                        <div class="section-title">查询模式</div>
+                        <div class="section-content">
+                            <div class="query-mode-selector">
+                                <label class="query-mode-option">
+                                    <input type="radio" name="queryMode" value="single" checked>
+                                    <span class="query-mode-label">
+                                        <strong>单学生查询</strong>
+                                        <small>适用于单个学生的精确查询</small>
+                                    </span>
+                                </label>
+                                <label class="query-mode-option">
+                                    <input type="radio" name="queryMode" value="multiple">
+                                    <span class="query-mode-label">
+                                        <strong>多学生查询</strong>
+                                        <small>通过多个学生的模糊信息和共同特征定位</small>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                <!-- 多学生查询区域 -->
+                <div id="multiStudentSection" class="hidden">
+                    <div class="section">
+                        <div class="section-title">学生列表</div>
+                        <div class="section-content">
+                            <div id="studentsList" class="students-list">
+                                <div class="notice">
+                                    <span class="notice-icon" aria-hidden="true">i</span>
+                                    <div class="notice-text">暂未添加任何学生。点击下方按钮添加学生信息。</div>
+                                </div>
+                            </div>
+                            <button id="addStudentBtn" class="secondary-btn">+ 添加学生</button>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">共同条件</div>
+                        <div class="section-content">
+                            <div class="common-conditions">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="commonProvince">
+                                    <label for="commonProvince">所有学生来自同一省份</label>
+                                </div>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="commonSchool">
+                                    <label for="commonSchool">所有学生来自同一学校</label>
+                                </div>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="commonGrade">
+                                    <label for="commonGrade">所有学生为同一入学年份</label>
+                                </div>
+                            </div>
+                            <div class="notice" style="margin-top: 12px;">
+                                <span class="notice-icon" aria-hidden="true">i</span>
+                                <div class="notice-text">启用共同条件后，只显示同时满足所有学生条件且符合共同条件的结果组合</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 查询按钮 -->
+                    <button id="multiQueryBtn" style="font-size: 1em; padding: 12px;">开始查询</button>
+
+                    <!-- 结果显示区域 -->
+                    <div id="multiResultsContainer" class="results-container hidden"></div>
+                </div>
+
+                <!-- 单学生查询区域 -->
+                <div id="singleStudentSection">
+                    <!-- 步骤1: 添加奖项条件 -->
+                    <div class="section">
+                        <div class="section-title">奖项条件</div>
+                        <div class="section-content">
+                            <div class="form-group">
+                                <label>搜索比赛（如: CSP2023, NOI2022, APIO）</label>
+                                <input type="text" id="contestSearch" placeholder="输入比赛关键字">
+                                <div id="contestResults" class="search-results hidden"></div>
+                            </div>
+
+                        <div id="selectedContestInfo" class="hidden">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>选择奖项等级</label>
+                                    <select id="awardSelect">
+                                        <!-- 通过JS动态填充 -->
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>精确分数</label>
+                                    <input type="number" id="scoreInput" placeholder="留空表示不限制分数" step="0.01">
+                                </div>
+                            </div>
+
+                            <button id="addConditionBtn">添加奖项条件</button>
+                        </div>
+
+                        <div id="conditionsList" style="margin-top: 20px;">
+                            <div class="notice">
+                                <span class="notice-icon" aria-hidden="true">i</span>
+                                <div class="notice-text">暂未添加任何奖项条件</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 网格布局区域：步骤2-5 -->
+                    <div class="sections-grid">
+                    <!-- 步骤2: 选择省份 -->
+                    <div class="section">
+                        <div class="section-title">省份</div>
+                        <div class="section-content">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="useProvince">
+                                <label for="useProvince" style="margin: 0;">按省份筛选</label>
+                            </div>
+
+                            <div id="provinceSection" class="hidden">
+                                <div class="form-group">
+                                    <label>搜索省份</label>
+                                    <input type="text" id="provinceSearch" placeholder="输入省份关键字（如: 浙江, 北京）">
+                                    <div id="provinceResults" class="search-results hidden"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤3: 选择学校 -->
+                    <div class="section">
+                        <div class="section-title">学校</div>
+                        <div class="section-content">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="useSchool">
+                                <label for="useSchool" style="margin: 0;">按学校筛选</label>
+                            </div>
+
+                            <div id="schoolSection" class="hidden">
+                                <div class="form-group">
+                                    <label>搜索学校（名称/省份/城市）</label>
+                                    <input type="text" id="schoolSearch" placeholder="输入学校关键字（如: 杭州二中, 清华附中）">
+                                    <div id="schoolResults" class="search-results hidden"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤4: 选择年级或年级范围 -->
+                    <div class="section">
+                        <div class="section-title">年级或年级范围</div>
+                        <div class="section-content">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="useGrade">
+                                <label for="useGrade" style="margin: 0;">按年级筛选</label>
+                            </div>
+
+                            <div id="gradeSection" class="hidden">
+                                <div class="form-group">
+                                    <label>筛选模式</label>
+                                    <select id="gradeMode">
+                                        <option value="single">单个年级</option>
+                                        <option value="range">年级范围</option>
+                                    </select>
+                                </div>
+
+                                <div id="singleGradeSection">
+                                    <div class="form-group">
+                                        <label>入学年份</label>
+                                        <input type="number" id="singleGradeInput" placeholder="如: 2019" min="2000" max="2030">
+                                    </div>
+                                </div>
+
+                                <div id="rangeGradeSection" class="hidden">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>起始年份</label>
+                                            <input type="number" id="gradeStartInput" placeholder="如: 2018" min="2000" max="2030">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>结束年份</label>
+                                            <input type="number" id="gradeEndInput" placeholder="如: 2020" min="2000" max="2030">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤5: 输入姓名简称 -->
+                    <div class="section">
+                        <div class="section-title">姓名简称</div>
+                        <div class="section-content">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="useName">
+                                <label for="useName" style="margin: 0;">按姓名简称筛选</label>
+                            </div>
+
+                            <div id="nameSection" class="hidden">
+                                <div class="form-group">
+                                    <label>姓名简称</label>
+                                    <input type="text" id="nameInput" placeholder="如: zxw, lhx">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 网格布局区域结束 -->
+
+                <!-- 查询按钮 -->
+                <button id="queryBtn" style="font-size: 1em; padding: 12px;">开始查询</button>
+
+                <!-- 结果显示区域 -->
+                <div id="resultsContainer" class="results-container hidden"></div>
+                </div>
+                <!-- 单学生查询区域结束 -->
+                </div>
+                <!-- 高级查询区域结束 -->
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>本项目仅供学习交流使用</p>
+            <p>数据来源: <a href="https://github.com/OIerDb-ng/OIerDb-data-generator" target="_blank" rel="noopener noreferrer">OIerDb-data-generator</a>&nbsp; Made with  💖  by Baoshuo, Menci, nocriz and yhx-12243</p>
+        </div>
+    </footer>
+
+    <script src="sql.js"></script>
+    <script src="result.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
