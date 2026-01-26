@@ -430,32 +430,32 @@ button:disabled {
 }
 
 .badge-gold {
-    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    background: #d4af37;
     color: #1a1a1a;
 }
 
 .badge-silver {
-    background: linear-gradient(135deg, #c0c0c0 0%, #e0e0e0 100%);
+    background: #c0c0c0;
     color: #1a1a1a;
 }
 
 .badge-bronze {
-    background: linear-gradient(135deg, #cd7f32 0%, #d89e5a 100%);
+    background: #cd7f32;
     color: white;
 }
 
 .badge-first {
-    background: linear-gradient(135deg, #dc3545 0%, #ff4757 100%);
+    background: #c23b3f;
     color: white;
 }
 
 .badge-second {
-    background: linear-gradient(135deg, #808080 0%, #909090 100%);
+    background: #808080;
     color: white;
 }
 
 .badge-third {
-    background: linear-gradient(135deg, #28a745 0%, #38b755 100%);
+    background: #5a8f5a;
     color: white;
 }
 

@@ -1,16 +1,10 @@
-/**
- * OIerDb SQL-like Data Access Layer
- * 提供类似 SQL 的接口来查询学生和比赛数据
- * 保持极高性能，使用索引和缓存优化
- */
+
 
 class OIerDbSQL {
     constructor() {
-        // 原始数据
         this.staticData = null;
         this.studentData = [];
         
-        // 高性能索引
         this.studentIndexes = {
             byName: new Map(),        // abbr -> [students]
             byGrade: new Map(),       // enroll_year -> [students]
@@ -19,7 +13,6 @@ class OIerDbSQL {
             byProvince: new Map()     // province -> [students]
         };
         
-        // 高性能 Set 索引（用于快速交集运算）
         this.studentById = new Map();         // student_id -> student
         this.contestStudentIndex = new Map(); // contest_id -> Set<student_id>
         this.schoolStudentIndex = new Map();  // school_id -> Set<student_id>
@@ -31,38 +24,95 @@ class OIerDbSQL {
         this.recordsCache = new Map();        // student_id -> [records]
     }
     
-    /**
-     * 初始化数据库，加载 static.json 和 result.txt
-     */
     async initialize(onProgress) {
         try {
-            // 更新进度回调
             const updateProgress = (percent, detail) => {
                 if (onProgress) onProgress(percent, detail);
             };
             
             updateProgress(0, '开始加载数据...');
             
-            // 加载静态数据
             updateProgress(10, '正在加载 static.json...');
             const staticResponse = await fetch('static.json');
-            this.staticData = await staticResponse.json();
+            
+            const staticContentLength = staticResponse.headers.get('Content-Length');
+            const staticTotal = parseInt(staticContentLength, 10);
+            
+            let staticLoaded = 0;
+            const staticReader = staticResponse.body.getReader();
+            const staticChunks = [];
+            
+            while (true) {
+                const { done, value } = await staticReader.read();
+                
+                if (done) break;
+                
+                staticChunks.push(value);
+                staticLoaded += value.length;
+                
+                if (staticTotal) {
+                    const fileProgress = (staticLoaded / staticTotal) * 100;
+                    const overallProgress = 10 + (fileProgress * 0.3); // 10% + (0-100% * 30%)
+                    updateProgress(Math.floor(overallProgress), `正在加载 static.json... ${fileProgress.toFixed(1)}% (${(staticLoaded / 1024).toFixed(2)} KB / ${(staticTotal / 1024).toFixed(2)} KB)`);
+                } else {
+                    updateProgress(10 + Math.min(staticLoaded / 10000, 30), `正在加载 static.json... (${(staticLoaded / 1024).toFixed(2)} KB)`);
+                }
+            }
+            
+            const staticChunksAll = new Uint8Array(staticLoaded);
+            let staticPosition = 0;
+            for (const chunk of staticChunks) {
+                staticChunksAll.set(chunk, staticPosition);
+                staticPosition += chunk.length;
+            }
+            
+            const staticText = new TextDecoder('utf-8').decode(staticChunksAll);
+            this.staticData = JSON.parse(staticText);
             updateProgress(40, 'static.json 加载完成');
             
-            // 加载学生结果数据
             updateProgress(40, '正在加载 result.txt...');
             const resultResponse = await fetch('result.txt');
-            const resultText = await resultResponse.text();
+            
+            const contentLength = resultResponse.headers.get('Content-Length');
+            const total = parseInt(contentLength, 10);
+            
+            let loaded = 0;
+            const reader = resultResponse.body.getReader();
+            const chunks = [];
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                
+                if (done) break;
+                
+                chunks.push(value);
+                loaded += value.length;
+                
+                if (total) {
+                    const fileProgress = (loaded / total) * 100;
+                    const overallProgress = 40 + (fileProgress * 0.3); // 40% + (0-100% * 30%)
+                    updateProgress(Math.floor(overallProgress), `正在加载 result.txt... ${fileProgress.toFixed(1)}% (${(loaded / 1024 / 1024).toFixed(2)} MB / ${(total / 1024 / 1024).toFixed(2)} MB)`);
+                } else {
+                    updateProgress(40 + Math.min(loaded / 100000, 30), `正在加载 result.txt... (${(loaded / 1024 / 1024).toFixed(2)} MB)`);
+                }
+            }
+            
+            const chunksAll = new Uint8Array(loaded);
+            let position = 0;
+            for (const chunk of chunks) {
+                chunksAll.set(chunk, position);
+                position += chunk.length;
+            }
+            
+            const resultText = new TextDecoder('utf-8').decode(chunksAll);
             updateProgress(70, 'result.txt 加载完成');
             
-            // 解析学生数据
             updateProgress(70, '正在解析学生数据...');
             this.studentData = resultText.trim().split('\n')
                 .map(line => this._parseStudentLine(line))
                 .filter(s => s !== null);
             updateProgress(85, '学生数据解析完成');
             
-            // 构建索引
             updateProgress(85, '正在构建索引...');
             this._buildIndexes();
             updateProgress(100, '全部加载完成');
@@ -76,9 +126,6 @@ class OIerDbSQL {
         }
     }
     
-    /**
-     * 解析单行学生数据
-     */
     _parseStudentLine(line) {
         const parts = line.split(',');
         if (parts.length < 7) return null;
