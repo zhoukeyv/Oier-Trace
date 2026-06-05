@@ -17,9 +17,6 @@
 - [OIerDb-data-generator](https://github.com/OIerDb-ng/OIerDb-data-generator)
 - [OIerDb-ng](https://github.com/OIerDb-ng)
 
-原数据库 Made with 💖 by [Baoshuo](https://baoshuo.ren), [Menci](https://men.ci), [nocriz](https://nocriz.github.io) and [yhx-12243](https://yhx-12243.github.io)
-
-
 ## 开源协议
 
 本项目采用 [Apache License 2.0](LICENSE) 协议开源。
