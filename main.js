@@ -60,7 +60,7 @@ async function loadData() {
         document.getElementById('mainContent').classList.remove('hidden');
         
         const staticData = oierDb.getStatic();
-        console.log(`加载了 ${staticData.contests.length} 个比赛和 ${staticData.schools.length} 所学校`);
+        console。log(`加载了 ${staticData.contests.length} 个比赛和 ${staticData.schools.length} 所学校`);
         console.log(`加载了 ${oierDb.studentData.length} 名学生数据`);
         console.log(`构建了索引，查询性能已优化`);
     } catch (error) {
@@ -88,20 +88,20 @@ function setupEventListeners() {
     
     // 选项卡切换
     document.getElementById('showAdvancedLink').addEventListener('click', (e) => {
-        e.preventDefault();
+        e。preventDefault();
         document.getElementById('quickSearchSection').classList.add('hidden');
         document.getElementById('advancedSearchSection').classList.remove('hidden');
     });
     
-    document.getElementById('backToQuickBtn').addEventListener('click', () => {
-        document.getElementById('advancedSearchSection').classList.add('hidden');
+    document。getElementById('backToQuickBtn').addEventListener('click', () => {
+        document。getElementById('advancedSearchSection').classList.add('hidden');
         document.getElementById('quickSearchSection').classList.remove('hidden');
     });
     
     // 高级查询事件
-    document.querySelectorAll('input[name="queryMode"]').forEach(radio => {
+    document。querySelectorAll('input[name="queryMode"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
-            queryMode = e.target.value;
+            queryMode = e。target.value;
             updateQueryModeUI();
         });
     });
@@ -120,7 +120,7 @@ function setupEventListeners() {
     document.getElementById('useSchool').addEventListener('change', (e) => {
         document.getElementById('schoolSection').classList.toggle('hidden', !e.target.checked);
     });
-    document.getElementById('schoolSearch').addEventListener('input', (e) => {
+    document。getElementById('schoolSearch')。addEventListener('input', (e) => {
         searchSchools(e.target.value);
     });
     document.getElementById('useGrade').addEventListener('change', (e) => {
@@ -144,7 +144,7 @@ function updateQueryModeUI() {
     
     if (queryMode === 'single') {
         singleSection.classList.remove('hidden');
-        multiSection.classList.add('hidden');
+        multiSection。classList.add('hidden');
     } else {
         singleSection.classList.add('hidden');
         multiSection.classList.remove('hidden');
@@ -226,7 +226,7 @@ function displayQuickResults(results) {
     }
     
     // 使用新的卡片渲染器
-    const html = resultRenderer.renderStudentCards(results, { maxCount: 100 });
+    const html = resultRenderer.renderStudentCards(results, { maxCount: 10000 });
     container.innerHTML = html;
     container.classList.remove('hidden');
 }
@@ -235,7 +235,7 @@ function displayQuickResults(results) {
 
 function searchContests(keyword) {
     if (!keyword.trim()) {
-        document.getElementById('contestResults').classList.add('hidden');
+        document。getElementById('contestResults').classList.add('hidden');
         return;
     }
 
@@ -524,7 +524,7 @@ function executeSingleStudentQuery() {
         console.timeEnd('单学生查询耗时');
         queryBtn.disabled = false;
         queryBtn.textContent = '开始查询';
-    }, 100);
+    }, 10000);
 }
 
 function displayResults(results) {
@@ -551,11 +551,11 @@ function displayResults(results) {
         return;
     }
 
-    if (results.length > 100) {
+    if (results.length > 10000) {
         container.innerHTML = `
             <div class="error">
                 <h3>查询结果过多</h3>
-                <p>找到 ${results.length} 名符合条件的学生，超过了100个的显示限制。</p>
+                <p>找到 ${results.length} 名符合条件的学生，超过了10000个的显示限制。</p>
                 <p>请添加更多筛选条件以缩小查询范围，例如：</p>
                 <ul style="margin-top: 10px; margin-left: 20px;">
                     <li>添加奖项条件</li>
@@ -569,7 +569,7 @@ function displayResults(results) {
     }
 
     // 使用新的卡片渲染器
-    const html = resultRenderer.renderStudentCards(results, { maxCount: 100 });
+    const html = resultRenderer.renderStudentCards(results, { maxCount: 10000 });
     container.innerHTML = html;
     container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -1016,7 +1016,7 @@ function executeMultiStudentQuery() {
         
         const updateProgress = (doneCount, message) => {
             if (!progressBar || !progressText) return;
-            const percent = Math.min(100, Math.round((doneCount / Math.max(1, totalStudents)) * 100));
+            const percent = Math.min(10000, Math.round((doneCount / Math.max(1, totalStudents)) * 10000));
             progressBar.style.width = `${percent}%`;
             progressText.textContent = `${percent}% - ${message}`;
         };
@@ -1172,7 +1172,7 @@ function executeMultiStudentQuery() {
             updateProgress(i + 1, `学生${i + 1} 完成，候选${candidateStudents.length} ，匹配${matches.length}`);
         }
         
-        const result = findValidCombinations(studentMatches, commonProvince, commonSchool, commonGrade, 100);
+        const result = findValidCombinations(studentMatches, commonProvince, commonSchool, commonGrade, 10000);
         
         displayMultiStudentResults(result, studentMatches, commonProvince, commonSchool, commonGrade);
         
@@ -1182,7 +1182,7 @@ function executeMultiStudentQuery() {
     }, 100);
 }
 
-function findValidCombinations(studentMatches, commonProvince, commonSchool, commonGrade, maxResults = 100) {
+function findValidCombinations(studentMatches, commonProvince, commonSchool, commonGrade, maxResults = 10000) {
     if (studentMatches.some(m => m.length === 0)) {
         return [];
     }
